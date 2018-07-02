@@ -17,6 +17,7 @@ function makeUL(array) {
 
 function makeList() {
     var list = makeUL(options[0])
-
-    return list
+    ul = document.getElementById('analysisComments')
+    console.log(list)
+    ul.appendChild(list)
 }

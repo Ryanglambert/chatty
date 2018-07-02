@@ -22,7 +22,8 @@
         <h1>Chatty</h1>
         <h2>Analyze Conversations Between Two People</h2>
         <div class="row">
-            <form onsubmit="makeList()" target="analysis">
+            {% comment %} <form target="analysis" onsubmit="makeList()"> {% endcomment %}
+            <form onsubmit="makeList()">
 
                 <div class="column">
                     <textarea id="inputText" class="text" cols="40" rows ="32" name="inputText" font-size="30px"></textarea>
@@ -30,9 +31,12 @@
                     <input type="submit" value="Analyze" class="submitButton" target="analysis">
                 </div>
 
-                <div id="analysisComments" class="column">
-                    <iframe name="analysis" style="display:none"></iframe>
+                <div class="column">
+                    <ul id="analysisComments">
+
+                    </ul>
                 </div>
+
             </form>
         </div>
     </body>
