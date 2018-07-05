@@ -32,7 +32,6 @@ cryptography=2.2.1=py36_0
 cycler=0.10.0=py36_0
 dbus=1.13.2=h760590f_1
 decorator=4.3.0=py36_0
-django=2.0.5=py36hd476221_0
 docutils=0.14=py36_0
 entrypoints=0.2.3=py36hd81d71f_2
 expat=2.2.5=hb8e80ba_0
@@ -122,7 +121,6 @@ pyparsing=2.2.0=py36_0
 pyqt=5.9.2=py36h11d3b92_0
 pysocks=1.6.8=py36_1
 pytest=3.6.2=py36_0
-pytest-django=3.3.2=py_0
 pytest-flask=0.10.0=py_1
 python=3.6.6=hc167b69_0
 python-crfsuite=0.9.5=py36h470a237_0
