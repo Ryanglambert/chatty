@@ -22,7 +22,7 @@
         <h1>Chatty</h1>
         <h2>Analyze Conversations Between Two People</h2>
         <div class="row">
-            <form onsubmit="makeList(); return false">
+            <form onsubmit="requestAnalysisAsync(updateAnalysisDisplay); return false">
 
                 <div class="column">
                     <textarea id="inputText" class="text" cols="40" rows ="32" name="inputText" font-size="30px"></textarea>

@@ -9,7 +9,7 @@ api = Api(app)
 class HelloWorld(Resource):
     @cors.crossdomain(origin="*")
     def get(self):
-        return jsonify({'hello': 'world'})
+        return jsonify({'hello': ['world', 'world2']})
 
 
 if __name__ == '__main__':
