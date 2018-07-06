@@ -1,11 +1,12 @@
 from flask import Flask, jsonify
 from flask_restplus import Api, Resource, cors
 
+from conf import conf
 
 app = Flask(__name__)
 api = Api(app)
 
-@api.route('/hello')
+@api.route('/chatty/')
 class HelloWorld(Resource):
     @cors.crossdomain(origin="*")
     def get(self):
@@ -13,4 +14,4 @@ class HelloWorld(Resource):
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=conf['chatty_rest']['debug'])
