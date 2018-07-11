@@ -1,3 +1,4 @@
 *.swp
 db*
 *.DS_store
+GoogleNews*
