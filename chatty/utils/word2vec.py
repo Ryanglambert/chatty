@@ -14,9 +14,8 @@ GOOG_NEWS_PATH = os.path.join(ROOT_PATH,
 
 
 class _DailyDialogueWordVectors(object):
-    def __init__(self, strings):
+    def __init__(self):
         self.model = KeyedVectors.load_word2vec_format(GOOG_NEWS_PATH, binary=True)  
-        self.strings = strings
 
     def _get_vector(self, word):
         if word in self.model.vocab:
@@ -48,12 +47,13 @@ class _DailyDialogueWordVectors(object):
     def _corpus_to_vecs(self, utterances):
         return np.concatenate(list(map(self._utter_to_vec, utterances)), axis=0)
 
-    def load_daily_dialogue_vectors(self):
+    def load_daily_dialogue_vectors(self, strings):
         "takes a lot of memory so only loading model temporarily"
-        return self._corpus_to_vecs(self.strings)
+        return self._corpus_to_vecs(strings)
 
 
-def vectorize(strings):
+def vectorize(*strings_list):
     "A one time vectorization tool to vectorize strings according to Google News word2vec"
-    vectorizer = _DailyDialogueWordVectors(strings)
-    return vectorizer.load_daily_dialogue_vectors()
+    vectorizer = _DailyDialogueWordVectors()
+    for strings in strings_list:
+        yield vectorizer.load_daily_dialogue_vectors(strings)
