@@ -2,7 +2,7 @@ from gensim.models import KeyedVectors
 import numpy as np
 import os
 
-from chatty.utils import contractions
+from chatty.utils import contractions, cleaning
 from conf import ROOT_PATH
 
 
@@ -17,9 +17,6 @@ class _DailyDialogueWordVectors(object):
     def __init__(self, strings):
         self.model = KeyedVectors.load_word2vec_format(GOOG_NEWS_PATH, binary=True)  
         self.strings = strings
-
-    def _lower(self, string):
-        return string.lower()
 
     def _get_vector(self, word):
         if word in self.model.vocab:
@@ -38,7 +35,7 @@ class _DailyDialogueWordVectors(object):
         return np.mean(concated, axis=0, keepdims=True)
 
     def _clean(self, word):
-        word = self._lower(word)
+        word = cleaning.lower(word)
         return word
 
     def _utter_to_vec(self, utter):
