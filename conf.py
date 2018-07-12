@@ -2,8 +2,8 @@ import os
 import yaml
 
 
-BASE = os.path.dirname(os.path.realpath(__file__))
-FNAME = os.path.join(BASE, 'conf.yaml')
+ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
+FNAME = os.path.join(ROOT_PATH, 'conf.yaml')
 
 def _load_configs():
     with open(FNAME, 'rb') as stream:
