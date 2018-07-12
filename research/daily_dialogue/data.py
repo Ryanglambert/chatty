@@ -112,6 +112,20 @@ def get_biggest_drawup(s):
     return s[i] - s[j]
 
 
+def get_lags(df, lag_range=[1, 2]):
+    "Gets lags values within conversation"
+    groupby_conv = df.groupby(df.index.get_level_values(0))
+    train_lags = pd.concat([groupby_conv.shift(i) 
+                            for i in lag_range],
+                           axis=1)
+    new_cols = []
+    for col in df.columns:
+        for lag_num in lag_range:
+            new_cols.append(col + "_t-" + str(lag_num))
+    train_lags.columns = new_cols
+    return train_lags
+
+
 def _get_recurrent_values(df):
     # diffs and shifts
     df['change_in_polarity'] = df.groupby([df.index.get_level_values(0), 'person'])['polarity'].diff()
