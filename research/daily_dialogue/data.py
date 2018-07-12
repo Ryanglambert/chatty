@@ -19,6 +19,8 @@ ACTS = {'1': 'inform', '2': 'question', '3': 'directive', '4': 'commissive'}
 EMOS = {'0': 'no_emotion', '1': 'anger', '2': 'disgust',
         '3': 'fear', '4': 'happiness', '5': 'sadness', '6': 'surprise'}
 
+np.random.seed(42)
+
 
 def _topic_stream():
     topics_file = os.path.join(DATA_DIR, 'dialogues_topic.txt')
@@ -187,8 +189,10 @@ def get_data(test_size=1000, use_cached=False):
         return train, train_vecs, test, test_vecs
     else:
         print('Not Using Cached')
+        print('Parsing Labeled Conversations')
         data = _data()
         train, test = _make_train_test_split(data)
+        print('Making word embeddings')
         train_vecs, test_vecs = word2vec.vectorize(train['utter'].values, test['utter'].values)
         _make_pickles_np(train_vecs, 'train')
         _make_pickles_np(test_vecs, 'test')
