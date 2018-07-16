@@ -1,3 +1,4 @@
+import itertools
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -67,7 +68,7 @@ def plot_conv(one):
     ax3.plot(person_b['subjectivity'], person_b.index)
 
 
-def plot_prec_rec(results: dict, title='', save_name=None, figsize=(5, 5)):
+def plot_prec_rec(results: dict, title='', save_name=None, figsize=(5, 5), fig=None):
     """Plots precision and recall curves for results dictionary
     Parameters
     ----------
@@ -90,8 +91,11 @@ def plot_prec_rec(results: dict, title='', save_name=None, figsize=(5, 5)):
     None
     """
     classes = results['classes']
-    fig = plt.figure(1, figsize=figsize)
-    ax = fig.add_subplot(111)
+    if not fig:
+        fig = plt.figure(1, figsize=figsize)
+        ax = fig.add_subplot(111)
+    else:
+        ax = fig
 
     # plot each split
     for y_true, y_proba in zip(results['y_true'], results['y_proba']):
@@ -122,5 +126,58 @@ def plot_prec_rec(results: dict, title='', save_name=None, figsize=(5, 5)):
     plt.xlabel('Recall')
     plt.ylabel('Precision')
     plt.title(title)
+    if save_name:
+        plt.savefig(save_name)
+
+
+def plot_confusion_matrix(cm, classes,
+                          normalize=False,
+                          title='Confusion matrix',
+                          cmap=plt.cm.Blues, save_name=None):
+    """
+    This function prints and plots the confusion matrix.
+    Normalization can be applied by setting `normalize=True`.
+
+    Parameters
+    ----------
+    cm : np.array
+        Confusion matrix
+    classes : np.array
+        e.g. array(['commissive', 'directive', 'inform', 'question'], dtype=object)        
+    normalize : bool
+        whether or not the confusion matrix should be normalized
+    title : str
+    cmap : matplotlib.pyplot.cm.<colors>
+        e.g. `plt.cm.Blues`
+
+    Returns
+    -------
+    None
+    """
+    if normalize:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        print("Normalized confusion matrix")
+    else:
+        print('Confusion matrix, without normalization')
+
+    print(cm)
+
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.title(title)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes)
+
+    fmt = '.2f' if normalize else 'd'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                 horizontalalignment="center",
+                 color="white" if cm[i, j] > thresh else "black")
+
+    plt.tight_layout()
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
     if save_name:
         plt.savefig(save_name)
