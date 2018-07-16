@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import textblob
 
-from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.model_selection import StratifiedKFold
 
 from chatty.utils import word2vec
 
@@ -227,7 +227,7 @@ def cv_stratified_shuffle(X: np.array, y: np.array, model, splits=5):
     y_true = []
     y_proba = []
     models = []
-    sss = StratifiedShuffleSplit(n_splits=splits)
+    sss = StratifiedKFold(n_splits=splits, shuffle=True)
     for train_index, val_index in sss.split(X, y):
         print('Training')
         x_train, x_val = X[train_index], X[val_index]
