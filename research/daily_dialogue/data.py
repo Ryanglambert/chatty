@@ -126,21 +126,6 @@ def get_lags(df, lag_range=[1, 2]):
     return train_lags
 
 
-def _get_recurrent_values(df):
-    # diffs and shifts
-    df['change_in_polarity'] = df.groupby([df.index.get_level_values(0), 'person'])['polarity'].diff()
-    # heard utterance information
-    shift_list = ['utter', 'polarity', 'subjectivity',
-                  'change_in_polarity', 'act', 'emo']
-    grouped = df.groupby([df.index.get_level_values(0)])
-    for label in shift_list:
-        df['heard_t1_' + label] = grouped[label].shift(1)
-        df['heard_t2_' + label] = grouped[label].shift(2)
-
-    df = pd.concat([df, pd.get_dummies(df[['heard_act', 'heard_emo', 'topic']])], axis=1)
-    return df
-
-
 def _make_df(convs):
     df = pd.DataFrame(convs,
                       columns=['person',
@@ -157,6 +142,8 @@ def _make_df(convs):
     # df = _get_recurrent_values(df)
 
     # add biggest drawup and drawdown (largest change in a conversation)
+    df['first_utterance'] = df.index.get_level_values(1)\
+        .map(lambda x: 1 if x == 0 else 0)
     df['biggest_drawup'] = df.groupby([df.index.get_level_values(0), 'person'])['polarity']\
                              .transform(get_biggest_drawup)
     df['biggest_drawdown'] = df.groupby([df.index.get_level_values(0), 'person'])['polarity']\
