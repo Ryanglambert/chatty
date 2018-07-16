@@ -3,6 +3,8 @@ import os
 import pandas as pd
 import textblob
 
+from sklearn.model_selection import StratifiedShuffleSplit
+
 from chatty.utils import word2vec
 
 
@@ -200,3 +202,45 @@ def get_data(test_size=1000, use_cached=False):
         _make_pickles_pd(train, 'train')
         _make_pickles_pd(test, 'test')
     return train, train_vecs, test, test_vecs
+
+
+def cv_stratified_shuffle(X: np.array, y: np.array, model, splits=5):
+    """Rusn stratified shuffle split on X, y, with given model, for n splits
+
+    Parameters
+    ----------
+    X : np.array
+    y : np.array
+    model : sklearn.base.BaseEstimator
+    splits : int
+        number of folds for cross validation
+
+    Returns
+    -------
+    results : dict
+        e.g.
+        {'y_true': [np.array, ... ],
+         'y_proba': [np.array, ... ],
+         'models': [sklearn.model, ... ],
+         'classes': ['directive', 'commissive' ... ]}
+    """
+    y_true = []
+    y_proba = []
+    models = []
+    sss = StratifiedShuffleSplit(n_splits=splits)
+    for train_index, val_index in sss.split(X, y):
+        print('Training')
+        x_train, x_val = X[train_index], X[val_index]
+        y_train, y_val = y[train_index], y[val_index]
+        model.fit(x_train, y_train)
+        proba = model.predict_proba(x_val)
+        y_true.append(y_val)
+        y_proba.append(proba)
+        models.append(model)
+    classes = model.classes_
+    return {
+        'y_true': y_true,
+        'y_proba': y_proba,
+        'models': models,
+        'classes': classes
+    }

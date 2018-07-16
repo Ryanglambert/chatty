@@ -1,4 +1,10 @@
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+from collections import OrderedDict
+from cycler import cycler
+from sklearn.metrics import precision_recall_curve
 
 
 def wrap_text(string, size_limit=None):
@@ -59,3 +65,62 @@ def plot_conv(one):
     # subjectivity plot
     ax3.plot(person_a['subjectivity'], person_a.index)
     ax3.plot(person_b['subjectivity'], person_b.index)
+
+
+def plot_prec_rec(results: dict, title='', save_name=None, figsize=(5, 5)):
+    """Plots precision and recall curves for results dictionary
+    Parameters
+    ----------
+    results : dict
+        e.g.
+        {'y_true': [np.array, ... ],
+         'y_proba': [np.array, ... ],
+         'models': [sklearn.model, ... ],
+         'classes': ['directive', 'commissive' ... ]}
+         `^^^ format of output from data.cv_stratified_shuffle()`
+    title : str
+        The title for the plot
+    save_name : str
+        If you want to save this figure
+    figsize : tuple (n, n)
+        Size of figure
+
+    Returns
+    -------
+    None
+    """
+    classes = results['classes']
+    fig = plt.figure(1, figsize=figsize)
+    ax = fig.add_subplot(111)
+
+    # plot each split
+    for y_true, y_proba in zip(results['y_true'], results['y_proba']):
+        y_true_cat = pd.get_dummies(y_true)
+        # reset colors so classes share the same color
+        ax.set_prop_cycle(None)
+        for i, cls in enumerate(classes):
+            precision, recall, thresholds = \
+                precision_recall_curve(y_true_cat.values[:, i],
+                                       y_proba[:, i])
+            ax.plot(recall, precision, label=cls)
+
+    # show legends matching colors to splits
+    handles, labels = plt.gca().get_legend_handles_labels()
+    by_label = OrderedDict(zip(labels, handles))
+    plt.legend(by_label.values(), by_label.keys())
+
+    # plot mean precision and recalls in black
+    for i, cls in enumerate(classes):
+        y_true = np.concatenate(results['y_true'])
+        y_true_cat = pd.get_dummies(y_true)
+        y_proba = np.concatenate(results['y_proba'])
+        precision, recall, thresholds = \
+            precision_recall_curve(y_true_cat.values[:, i],
+                                   y_proba[:, i])
+        ax.plot(recall, precision, label=cls, color='black')
+
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    plt.title(title)
+    if save_name:
+        plt.savefig(save_name)
