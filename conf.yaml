@@ -1,31 +1,22 @@
 ---
-chatty_rest:
+api:
   local:
-    fqdn: "http://127.0.0.1:5000/"
     db_pg: ""
     debug: True
   dev:
-    fqdn: "http://dev_chatty_rest.ryanglambert.com:5000/"
     db_pg: ""
     debug: True
   prod:
-    fqdn: "http://chatty_rest.ryanglambert.com:2693/"
     db_pg: ""
     debug: False
 
-chatty_front_end:
+core:
   local:
-    fqdn: "http://127.0.0.1:8000/"
     db_pg: ""
     debug: True
-    secret_key: "r_e42%@*n9a=2xx&y$szh-(c7qe=s6s8xxd%lbzp#s9ogp-dra"
   dev:
-    fqdn: "http://dev_chatty.ryanglambert.com:8000/"
     db_pg: ""
     debug: True
-    secret_key: "thisshouldbechanged"
   prod:
-    fqdn: "http://prod_chatty.ryanglambert.com:4144/"
     db_pg: ""
     debug: False
-    secret_key: "thisshouldbechanged"

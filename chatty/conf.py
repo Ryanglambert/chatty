@@ -2,11 +2,13 @@ import os
 import yaml
 
 
-ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
-FNAME = os.path.join(ROOT_PATH, 'conf.yaml')
+CONF_YAML_PATH = os.environ.get('CHATTY_CONF')
+
+if not CONF_YAML_PATH:
+    raise EnvironmentError("CHATTY_CONF should point to your conf.yml file")
 
 def _load_configs():
-    with open(FNAME, 'rb') as stream:
+    with open(CONF_YAML_PATH, 'rb') as stream:
         try:
             return yaml.load(stream)
         except yaml.YAMLError as exc:
@@ -16,12 +18,16 @@ def _load_configs():
 def _parse_envs(configs):
     try:
         env = os.environ['ENV'].lower()
+        if env == '':
+            raise EnvironmentError("ENV environment variable should be set")
     except KeyError:
-        print("You haven't set your \'ENV\' variable")
+        raise EnvironmentError("ENV environment variable should be set")
+
     env_configs = dict()
     for k, v in configs.items():
         new_value_conf = v[env]
         env_configs[k] = new_value_conf
+
     return env_configs 
         
 
