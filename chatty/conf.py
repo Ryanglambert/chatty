@@ -2,10 +2,10 @@ import os
 import yaml
 
 
-CONF_YAML_PATH = os.environ.get('CHATTY_CONF')
+CONF_YAML_PATH = os.environ.get('CHATTY_CONF_PATH')
 
 if not CONF_YAML_PATH:
-    raise EnvironmentError("CHATTY_CONF should point to your conf.yml file")
+    raise EnvironmentError("CHATTY_CONF_PATH should point to your conf.yml file")
 
 def _load_configs():
     with open(CONF_YAML_PATH, 'rb') as stream:
