@@ -1,52 +1,25 @@
 ---
 api:
   local:
-    db_pg: 
-      host: 127.0.0.1
-      port: 5432
-    db_redis:
-      host: ''
-      port: ''
     debug: True
   dev:
-    db_pg: 
-      host: ''
-      port: ''
-    db_redis:
-      host: ''
-      port: ''
     debug: True
   prod:
-    db_pg:
-      host: ''
-      port: ''
-    db_redis:
-      host: ''
-      port: ''
     debug: False
 
 core:
   local:
-    db_pg:
-      host: ''
-      port: ''
     db_redis:
-      host: ''
-      port: ''
+      host: 
+      port: 
     debug: True
   dev:
-    db_pg:
-      host: ''
-      port: ''
     db_redis:
-      host: ''
-      port: ''
+      host: 
+      port: 
     debug: True
   prod:
-    db_pg:
-      host: ''
-      port: ''
     db_redis:
-      host: ''
-      port: ''
+      host: 
+      port: 
     debug: False
