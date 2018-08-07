@@ -1,29 +1,44 @@
+import os
+import numpy as np
+
 from flask import Flask, jsonify, request
-from flask_restplus import Api, Resource, cors, fields
+from flask_restplus import Namespace, Resource, fields, Api
 
-from conf import conf
+from chatty.conf import conf
 
-app = Flask(__name__)
+
+app = Flask(__name__, instance_relative_config=True)
+# app.config.from_mapping(**conf['api'])
 api = Api(app)
 
 input_model = api.model('Input', {
-    "text": fields.String("Text of your conversation")
+    "text": fields.String("Text of your conversation", required=True)
 })
 
-# @api.route('/chatty/')
-# class HelloWorld(Resource):
-#     @cors.crossdomain(origin="*", methods="*", headers="*")
-#     def post(self):
-#         text = request.json['text']
-#         lines = text.split('\n')
-#         return jsonify({'lines': lines})
+output_model = api.model('Output', {
+    "utterances": fields.List(fields.String),
+    "sentiment": fields.List(fields.String),
+    "next_sentiment": fields.String(),
+    "confidence": fields.Float()
+})
 
-#     def options(self):
-#         return {'Allow' : 'POST,GET,OPTIONS' }, 200, \
-#                {'Access-Control-Allow-Origin': '*', \
-#                 'Access-Control-Allow-Methods' : 'POST,GET,OPTIONS',
-#                 'Access-Control-Allow-Headers': '*'}
-
+@api.route('/analyze')
+class ChatAnalyzer(Resource):
+    @api.expect(input_model)
+    @api.marshal_with(output_model)
+    def post(self):
+        """Analyze some Text"""
+        sentiment = ['happy', 'sad', 'surprised', 'disgust', 'fear', 'anger']
+        text = request.get_json(
+            force=True
+        )['text']
+        utterances = text.split('__eou__')
+        return {
+            'utterances': utterances,
+            'sentiment': [np.random.choice(sentiment) for i in utterances],
+            'next_sentiment': np.random.choice(sentiment),
+            'confidence': np.random.rand()
+        }, 201
 
 if __name__ == '__main__':
-    app.run(debug=conf['chatty_rest']['debug'])
+    app.run(debug=True)
