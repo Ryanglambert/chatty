@@ -4,6 +4,7 @@ import numpy as np
 from flask import Flask, jsonify, request
 from flask_restplus import Namespace, Resource, fields, Api
 
+from chatty.analyze import analyze
 from chatty.conf import conf
 
 
@@ -18,8 +19,11 @@ input_model = api.model('Input', {
 output_model = api.model('Output', {
     "utterances": fields.List(fields.String),
     "sentiment": fields.List(fields.String),
+    "conf_sentiment": fields.List(fields.Float),
+    "speech_acts": fields.List(fields.String),
+    "conf_speech_acts": fields.List(fields.Float),
     "next_sentiment": fields.String(),
-    "confidence": fields.Float()
+    "conf_next_sentiment": fields.Float()
 })
 
 @api.route('/analyze')
@@ -28,17 +32,10 @@ class ChatAnalyzer(Resource):
     @api.marshal_with(output_model)
     def post(self):
         """Analyze some Text"""
-        sentiment = ['happy', 'sad', 'surprised', 'disgust', 'fear', 'anger']
         text = request.get_json(
             force=True
         )['text']
-        utterances = text.split('__eou__')
-        return {
-            'utterances': utterances,
-            'sentiment': [np.random.choice(sentiment) for i in utterances],
-            'next_sentiment': np.random.choice(sentiment),
-            'confidence': np.random.rand()
-        }, 201
+        return analyze(text), 201
 
 if __name__ == '__main__':
     app.run(debug=True)
