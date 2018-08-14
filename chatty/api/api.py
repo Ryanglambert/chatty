@@ -9,7 +9,7 @@ from chatty.conf import conf
 
 
 app = Flask(__name__, instance_relative_config=True)
-# app.config.from_mapping(**conf['api'])
+app.config.from_mapping(**conf['api'])
 api = Api(app)
 
 input_model = api.model('Input', {
@@ -38,4 +38,4 @@ class ChatAnalyzer(Resource):
         return analyze(text), 201
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=conf['api']['debug'])
