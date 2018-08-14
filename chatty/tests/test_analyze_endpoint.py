@@ -1,12 +1,23 @@
 import pytest
+import json
 
 from flask import jsonify, request
 
 
 def test_analyze(client):
-    response = request.post(
-        path='/analyze',
+    response = client.post(
+        '/analyze',
         content_type="application/json",
-        data={'text': 'test __eou__ another'}
+        json={'text': 'test __eou__ another'}
     )
-    assert False
+    payload = response.get_json()
+    for field, value_type in [
+        ('conf_next_sentiment', float),
+        ('conf_sentiment', list),
+        ('next_sentiment', str),
+        ('sentiment', list),
+        ('speech_acts', list),
+        ('utterances', list)
+    ]:
+        assert field in payload
+        assert isinstance(payload[field], value_type)
