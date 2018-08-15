@@ -1,3 +1,4 @@
+import json
 import os
 import numpy as np
 
@@ -33,10 +34,9 @@ def create_app(config=conf['api']):
         @api.marshal_with(output_model)
         def post(self):
             """Analyze some Text"""
-            text = request.get_json(
-                force=True
-            )['text']
+            text = json.loads(request.data, strict=False)['text']
             return analyze(text), 201
+
     return app
 
 if __name__ == '__main__':
