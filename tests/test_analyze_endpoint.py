@@ -1,7 +1,4 @@
 import pytest
-import json
-
-from flask import jsonify, request
 
 
 def test_analyze(client):
