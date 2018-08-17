@@ -3,10 +3,11 @@ import numpy as np
 import os
 
 from chatty.utils import contractions, cleaning
-from conf import ROOT_PATH
 
-
-GOOG_NEWS_PATH = os.path.join(ROOT_PATH,
+CURDIR = os.path.dirname(os.path.abspath(__file__))
+GOOG_NEWS_PATH = os.path.join(CURDIR,
+                              "..",
+                              "..",
                               'research',
                               'daily_dialogue',
                               'data',

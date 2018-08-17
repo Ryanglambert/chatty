@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import textblob
 
+from imblearn.over_sampling import SMOTE, ADASYN
 from sklearn.model_selection import StratifiedKFold
 
 from chatty.utils import word2vec
@@ -204,7 +205,20 @@ def get_data(test_size=1000, use_cached=False):
     return train, train_vecs, test, test_vecs
 
 
-def cv_stratified_shuffle(X: np.array, y: np.array, model, splits=5):
+def resample(X, y, method='SMOTE'):
+    methods = {
+        'SMOTE': SMOTE(),
+        'ADASYN': ADASYN()
+    }
+    X_resampled, y_resampled = methods[method].fit_sample(X, y)
+    return X_resampled, y_resampled
+
+
+def cv_stratified_shuffle(X: np.array,
+                          y: np.array,
+                          model,
+                          splits=5,
+                          upsample=None):
     """Rusn stratified shuffle split on X, y, with given model, for n splits
 
     Parameters
@@ -214,6 +228,8 @@ def cv_stratified_shuffle(X: np.array, y: np.array, model, splits=5):
     model : sklearn.base.BaseEstimator
     splits : int
         number of folds for cross validation
+    upsample : str or None
+        Can specify either 'ADASYN' or 'SMOTE'
 
     Returns
     -------
@@ -232,7 +248,10 @@ def cv_stratified_shuffle(X: np.array, y: np.array, model, splits=5):
         print('Training')
         x_train, x_val = X[train_index], X[val_index]
         y_train, y_val = y[train_index], y[val_index]
-        model.fit(x_train, y_train)
+        if upsample:
+            model.fit(*resample(x_train, y_train, method=upsample))
+        else:
+            model.fit(x_train, y_train)
         proba = model.predict_proba(x_val)
         y_true.append(y_val)
         y_proba.append(proba)
