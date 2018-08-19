@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import textblob
 
-from imblearn.over_sampling import SMOTE, ADASYN
+from imblearn.over_sampling import SMOTE, ADASYN, RandomOverSampler
 from sklearn.model_selection import StratifiedKFold
 
 from chatty.utils import word2vec
@@ -205,10 +205,22 @@ def get_data(test_size=1000, use_cached=False):
     return train, train_vecs, test, test_vecs
 
 
+@staticmethod
+def _random_upsample(X, y):
+    X_resampled, y_resampled = RandomOverSampler('minority')\
+                                    .fit_sample(X.reshape(-1, 1),
+                                                y.reshape(-1, 1))
+    return X_resampled.ravel(), y_resampled.ravel()
+
+
 def resample(X, y, method='SMOTE'):
+    class Random(object):
+        fit_sample = _random_upsample
+
     methods = {
         'SMOTE': SMOTE(),
-        'ADASYN': ADASYN()
+        'ADASYN': ADASYN(),
+        'random': Random()
     }
     X_resampled, y_resampled = methods[method].fit_sample(X, y)
     return X_resampled, y_resampled
