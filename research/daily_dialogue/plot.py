@@ -5,7 +5,8 @@ import pandas as pd
 
 from collections import OrderedDict
 from cycler import cycler
-from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import precision_recall_curve, confusion_matrix
+from sklearn.preprocessing.label import LabelEncoder
 
 
 def wrap_text(string, size_limit=None):
@@ -68,7 +69,7 @@ def plot_conv(one):
     ax3.plot(person_b['subjectivity'], person_b.index)
 
 
-def plot_prec_rec(results: dict, title='', save_name=None, figsize=(5, 5), fig=None):
+def plot_prec_rec(results: dict, title='', save_name=None, figsize=(10, 5), normalize_confusion_matrix=True):
     """Plots precision and recall curves for results dictionary
     Parameters
     ----------
@@ -91,11 +92,8 @@ def plot_prec_rec(results: dict, title='', save_name=None, figsize=(5, 5), fig=N
     None
     """
     classes = results['classes']
-    if not fig:
-        fig = plt.figure(1, figsize=figsize)
-        ax = fig.add_subplot(111)
-    else:
-        ax = fig
+    fig = plt.figure(1, figsize=figsize)
+    ax = fig.add_subplot(121)
 
     # plot each split
     for y_true, y_proba in zip(results['y_true'], results['y_proba']):
@@ -126,6 +124,35 @@ def plot_prec_rec(results: dict, title='', save_name=None, figsize=(5, 5), fig=N
     plt.xlabel('Recall')
     plt.ylabel('Precision')
     plt.title(title)
+
+    # plot confusion matrix
+    le = LabelEncoder()
+    le.fit(results['classes'])
+
+    cm = confusion_matrix(le.transform(np.concatenate(results['y_true'])),
+                          np.argmax(np.concatenate(results['y_proba']), axis=1))
+    if normalize_confusion_matrix:
+        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+
+    ax1 = fig.add_subplot(122)
+    ax1.imshow(cm, cmap=plt.cm.Blues)
+    ax1.set_title(title)
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks, classes, rotation=45)
+    plt.yticks(tick_marks, classes, )
+
+    fmt = '.2f'
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, format(cm[i, j], fmt),
+                horizontalalignment="center",
+                color="white" if cm[i, j] > thresh else "black")
+
+    plt.ylabel('True label')
+    ax1.yaxis.set_label_coords(-0.1, 1.02)
+    plt.xlabel('Predicted label')
+
+
     if save_name:
         plt.savefig(save_name)
 
@@ -135,6 +162,7 @@ def plot_confusion_matrix(cm, classes,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues, save_name=None):
     """
+    DEPRECATED
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
 
@@ -173,10 +201,9 @@ def plot_confusion_matrix(cm, classes,
     thresh = cm.max() / 2.
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
         plt.text(j, i, format(cm[i, j], fmt),
-                 horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
+                horizontalalignment="center",
+                color="white" if cm[i, j] > thresh else "black")
 
-    plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
     if save_name:
