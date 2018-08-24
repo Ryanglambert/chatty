@@ -1,20 +1,15 @@
+import functools
 import json
+import logging
 import os
 import spacy
+import time
+
+from chatty.utils.multiprocessing import parmap
 
 
 nlp = spacy.load('en')
 subjects = {'nsubj', 'pobj', 'dobj', 'cobj', 'iobj'}
-
-
-def tag(prefix="", suffix=""):
-    def decorator(func):
-        def new(string):
-            output = func(string)
-            for i in output:
-                yield prefix + i + suffix
-        return new
-    return decorator
 
 
 def root_to_leave_dep(tok, last_head=None):
@@ -25,6 +20,9 @@ def root_to_leave_dep(tok, last_head=None):
 
 
 def tokenize_subjects(doc: spacy.tokens.doc.Doc, sep='_'):
+    """
+    tokenize ROOT_<text>_ROOTPOS_<pos_text>_POS_<token_pos>_DEP_<token_dep>
+    """
     for sent in doc.sents:
         root = sent.root
         for tok in sent:
@@ -33,6 +31,15 @@ def tokenize_subjects(doc: spacy.tokens.doc.Doc, sep='_'):
                 
 
 def tokenize_pos_obj(doc: spacy.tokens.doc.Doc, sep='_'):
+    """
+    tokenize
+    LEMMA_<lemma_text>_POS_<pos_text>
+
+
+    e.g.
+    tokenize_pos_obj("He is walking") ->
+    ['LEMMA_he_POS_NOUN', 'LEMMA_be_POS_VERB', 'LEMMA_walk_POS_VERB']
+    """
     for tok in doc:
         yield sep.join(("LEMMA", tok.lemma_, "POS", tok.pos_))
 
@@ -75,7 +82,7 @@ def tokenize_as_list(*args, **kwargs):
     return tokens
 
 
-def save_vocab(vocab: list, *token_types):
+def _vocab_path(*token_types):
     # this ensures that we don't have the same two things
     # with different file names
     token_types = sorted(token_types)
@@ -86,11 +93,70 @@ def save_vocab(vocab: list, *token_types):
     base_path = os.path.join(base_path, "research")
     base_path = os.path.join(base_path, "daily_dialogue", 'data', 'vocab')
     fpath = os.path.join(base_path, fpath)
-
-    with open(fpath, 'w') as f:
-        json.dump({"vocab": vocab,
-                   "token_types": token_types},
-                   f, ensure_ascii=False)
-
     return fpath
-            
+
+
+def save_vocab(vocab: list, *token_types, **kwargs):
+    fpath = _vocab_path(*token_types)
+    with open(fpath, 'w') as f:
+        output = {
+            "vocab": vocab,
+            "token_types": token_types
+        }
+        output.update(kwargs)
+        json.dump(output, f, ensure_ascii=False)
+
+
+def load_vocab(*token_types):
+    fpath = _vocab_path(*token_types)
+    with open(fpath, 'r') as f:
+        return json.load(f)
+
+
+def make_vocabulary(docs, tokenizers=[], chunksize=25, n_jobs=1):
+    """Tokenizes docs and saves to a .json file with a name based on tokenizers used
+
+    Parameters
+    ----------
+    docs : list or generator
+        List of docs that you want to tokenize
+    tokenizers : list of 2-tuples of (str, <function>)
+        List of tokenizers and a 'name'
+    chunksize : int
+        Size of chunk of documents to tokenize at a time if running in parallel
+    n_jobs : int
+        Number of processes to use to make the vocabulary
+
+    Returns
+    -------
+    None
+
+    Example
+    -------
+    >>> make_vocabulary(docs, tokenizers=[(ngram, 'ngram'),
+                        chunksize=250, n_jobs=-1])
+    """
+    # setup logging
+    logging.basicConfig(
+        filename=__name__ + ".log",
+        level=logging.DEBUG
+    )
+    logger = logging.getLogger(__name__)
+    logger.info("Building Vocabulary Starting at: {}".format(
+        time.clock()
+    ))
+
+    # names will be used in the savename
+    tokenizer_names, tokenizers = zip(*tokenizers)
+    # make tokenizer
+    tokenizer = functools.partial(tokenize_as_list,
+                                  sep='_', tokenizers=tokenizers)
+    start = time.time()
+    if n_jobs == -1:
+        vocab = parmap(tokenizer, docs, chunksize=chunksize)
+    else:
+        vocab = list(map(tokenizer, docs))
+    total_time = time.time() - start
+
+    # save
+    save_vocab(vocab, *tokenizer_names, time=total_time)
