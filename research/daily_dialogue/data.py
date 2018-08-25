@@ -57,6 +57,16 @@ def _file_streams():
             for i in file_paths]
 
 
+def _dialogues_path():
+    return os.path.join(DATA_DIR, 'dialogues_text.txt')
+
+
+def dialogues():
+    fpath = _dialogues_path()
+    with open(fpath, 'r') as stream:
+        return stream.readlines()
+
+
 def _to_unicode(string):
     return str(string, 'utf-8')
 

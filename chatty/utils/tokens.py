@@ -1,41 +1,42 @@
-import functools
+import datetime
 import json
 import logging
 import os
-import spacy
 import time
+from functools import partial
+
+import pandas as pd
+import spacy
 
 from chatty.utils.multiprocessing import parmap
 
-
 nlp = spacy.load('en')
-subjects = {'nsubj', 'pobj', 'dobj', 'cobj', 'iobj'}
+_SUBJECTS = {'nsubj', 'pobj', 'dobj', 'cobj', 'iobj'}
+VOCAB_SPLITTER = '-'
 
 
-def root_to_leave_dep(tok, last_head=None):
-    if tok.head == last_head:
-        return tok
-    else:
-        return root_to_leave_dep(tok.head, last_head=tok.head)
+def ngramize(gen, ngrams=[1], sep='_'):
+    grams = list(gen)
+    for ngram_size in ngrams:
+        for i in range(ngram_size, len(grams) + 1):
+            yield sep.join(grams[i - ngram_size: i])
 
 
-def tokenize_subjects(doc: spacy.tokens.doc.Doc, sep='_'):
+def subjects_dependency_pos(doc: spacy.tokens.doc.Doc, sep='_'):
     """
     tokenize ROOT_<text>_ROOTPOS_<pos_text>_POS_<token_pos>_DEP_<token_dep>
     """
     for sent in doc.sents:
         root = sent.root
         for tok in sent:
-            if tok.dep_ in subjects:
+            if tok.dep_ in _SUBJECTS:
                 yield sep.join(('ROOT', root.text, "ROOTPOS", root.pos_, "POS", tok.pos_, "DEP", tok.dep_))
                 
 
-def tokenize_pos_obj(doc: spacy.tokens.doc.Doc, sep='_'):
+def pos_lemma(doc: spacy.tokens.doc.Doc, sep='_'):
     """
     tokenize
     LEMMA_<lemma_text>_POS_<pos_text>
-
-
     e.g.
     tokenize_pos_obj("He is walking") ->
     ['LEMMA_he_POS_NOUN', 'LEMMA_be_POS_VERB', 'LEMMA_walk_POS_VERB']
@@ -44,30 +45,23 @@ def tokenize_pos_obj(doc: spacy.tokens.doc.Doc, sep='_'):
         yield sep.join(("LEMMA", tok.lemma_, "POS", tok.pos_))
 
 
-def tokenize_words(doc: spacy.tokens.doc.Doc, sep='_'):
+def pos_and_words(doc: spacy.tokens.doc.Doc, sep='_'):
     for tok in doc:
-        yield sep.join((tok.lemma_, tok.pos_))
+        yield sep.join(('WORD', tok.text.lower(), 'POS', tok.pos_))
+
+            
+def pos(doc: spacy.tokens.doc.Doc, sep='_'):
+    for tok in doc:
+        yield sep.join(('POS', tok.pos_))
 
 
-def ngram_pos_and_words(doc: spacy.tokens.doc.Doc, sep='_', ngrams=[1]):
-    for ngram_size in ngrams:
-        for i in range(0, len(doc) - ngram_size):
-            yield sep.join([sep.join((i.text.lower(), i.pos_)) for i in doc[i: i + ngram_size]])
-            
-            
-def ngram_pos(doc: spacy.tokens.doc.Doc, sep='_', ngrams=[1]):
-    for ngram_size in ngrams:
-        for i in range(0, len(doc) - ngram_size):
-            yield sep.join([j.pos_ for j in doc[i: i + ngram_size]])
-            
-            
-def ngram(doc: spacy.tokens.doc.Doc, sep='_', ngrams=[1]):
-    for ngram_size in ngrams:
-        for i in range(0, len(doc) - ngram_size):
-            yield sep.join([j.text.lower() for j in doc[i: i + ngram_size]])
+def word(doc: spacy.tokens.doc.Doc, sep='_', lower=True):
+    for tok in doc:
+        yield sep.join(('WORD', tok.text.lower())) if lower else tok.text
 
 
 def tokenize(string: str, tokenizers=[], sep='_'):
+    "all tokenizers come through here"
     doc = nlp(string)
     for tokenizer in tokenizers:
         for token in tokenizer(doc, sep=sep):
@@ -82,16 +76,21 @@ def tokenize_as_list(*args, **kwargs):
     return tokens
 
 
-def _vocab_path(*token_types):
-    # this ensures that we don't have the same two things
-    # with different file names
-    token_types = sorted(token_types)
-    fpath = "_".join(["{}".format(tok) for tok in token_types])
-    fpath = fpath + ".json"
+def _vocab_dir():
     base_path = os.path.dirname(os.path.realpath(__file__))
     base_path = os.path.dirname(os.path.dirname(base_path))
     base_path = os.path.join(base_path, "research")
     base_path = os.path.join(base_path, "daily_dialogue", 'data', 'vocab')
+    return base_path
+
+
+def _vocab_path(*token_types):
+    # this ensures that we don't have the same two things
+    # with different file names
+    token_types = sorted(token_types)
+    fpath = VOCAB_SPLITTER.join(["{}".format(tok) for tok in token_types])
+    fpath = fpath + ".json"
+    base_path = _vocab_dir()
     fpath = os.path.join(base_path, fpath)
     return fpath
 
@@ -136,27 +135,43 @@ def make_vocabulary(docs, tokenizers=[], chunksize=25, n_jobs=1):
     >>> make_vocabulary(docs, tokenizers=[(ngram, 'ngram'),
                         chunksize=250, n_jobs=-1])
     """
-    # setup logging
-    logging.basicConfig(
-        filename=__name__ + ".log",
-        level=logging.DEBUG
-    )
-    logger = logging.getLogger(__name__)
-    logger.info("Building Vocabulary Starting at: {}".format(
-        time.clock()
-    ))
-
     # names will be used in the savename
     tokenizer_names, tokenizers = zip(*tokenizers)
     # make tokenizer
-    tokenizer = functools.partial(tokenize_as_list,
+    tokenizer = partial(tokenize_as_list,
                                   sep='_', tokenizers=tokenizers)
     start = time.time()
     if n_jobs == -1:
         vocab = parmap(tokenizer, docs, chunksize=chunksize)
+    elif n_jobs > 0:
+        vocab = parmap(tokenizer, docs, chunksize=chunksize, processes=n_jobs)
     else:
         vocab = list(map(tokenizer, docs))
     total_time = time.time() - start
 
     # save
     save_vocab(vocab, *tokenizer_names, time=total_time)
+
+
+def list_vocabs():
+    dirs = os.listdir(_vocab_dir())
+    vocabs = list(filter(lambda x: '.json' in x, dirs))
+    vocabs = [i.replace('.json', '') for i in vocabs]
+    separated_tokens = tuple([sorted(i.split(VOCAB_SPLITTER)) for i in vocabs])
+    return separated_tokens
+
+
+def word_ngram_2(doc: spacy.tokens.doc.Doc, sep='-'):
+    for tok in ngramize(word(doc)):
+        yield tok
+
+
+def first_shot():
+    import research.daily_dialogue.data as data
+    dialogues = data.dialogues()
+    
+    tokenizers = [
+        ('subjects_dependency_pos', subjects_dependency_pos),
+        ('word_ngram_2', word_ngram_2)
+    ]
+    make_vocabulary(dialogues, tokenizers=tokenizers, chunksize=100, n_jobs=4)
