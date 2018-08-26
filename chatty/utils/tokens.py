@@ -1,3 +1,11 @@
+"""
+This module is the central authority of this repo for tokenization
+of strings.
+
+In general, care should be used when removing tokenizers. Vocabularies are generated asynchronously and stored in .json files. These .json files contain the vocabulary using functions named in this module. 
+
+If these functions change names then the vocabularies would need to be remade. 
+"""
 import datetime
 import json
 import logging
@@ -9,6 +17,7 @@ import pandas as pd
 import spacy
 
 from chatty.utils.multiprocessing import parmap
+import data
 
 nlp = spacy.load('en')
 _SUBJECTS = {'nsubj', 'pobj', 'dobj', 'cobj', 'iobj'}
@@ -166,12 +175,26 @@ def word_ngram_2(doc: spacy.tokens.doc.Doc, sep='-'):
         yield tok
 
 
-def first_shot():
-    import research.daily_dialogue.data as data
-    dialogues = data.dialogues()
+def first_shot(use_cached_utterances=True, include_test_vocab=False):
+    if use_cached_utterances:
+        print("### USING CACHED UTTERANCES ###")
+    else:
+        print("### NOT USING CACHED UTTERANCES ###")
+    # SHOULD USE THE TRAIN DATA INSTEAD OF DIALOGUES DIRECTLY SINCE UTTERANCES ARE ALREADY SPLIT
+    ### \/ methods below don't correctly separate on '__eou__'
+    # import research.daily_dialogue.data as data
+    # dialogues = data.dialogues()
+    train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
+    utterances = train['utter'].tolist()
+    
     
     tokenizers = [
         ('subjects_dependency_pos', subjects_dependency_pos),
         ('word_ngram_2', word_ngram_2)
     ]
-    make_vocabulary(dialogues, tokenizers=tokenizers, chunksize=100, n_jobs=4)
+    make_vocabulary(utterances, tokenizers=tokenizers, chunksize=100, n_jobs=4)
+    if include_test_vocab:
+        print("ALSO MAKING TEST VOCAB")
+        utterances_test = test['utter'].tolist()
+        make_vocabulary(utterances_test, tokenizers=tokenizers, chunksize=100, n_jobs=4)
+
