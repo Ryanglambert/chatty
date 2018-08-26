@@ -121,7 +121,7 @@ def load_vocab(*token_types):
         return json.load(f)
 
 
-def make_vocabulary(docs, tokenizers=[], chunksize=25, n_jobs=1):
+def make_vocabulary(docs, tokenizers=[], chunksize=25, n_jobs=1, verbose=False):
     """Tokenizes docs and saves to a .json file with a name based on tokenizers used
 
     Parameters
@@ -151,9 +151,9 @@ def make_vocabulary(docs, tokenizers=[], chunksize=25, n_jobs=1):
                                   sep='_', tokenizers=tokenizers)
     start = time.time()
     if n_jobs == -1:
-        vocab = parmap(tokenizer, docs, chunksize=chunksize)
+        vocab = parmap(tokenizer, docs, chunksize=chunksize, verbose=verbose)
     elif n_jobs > 0:
-        vocab = parmap(tokenizer, docs, chunksize=chunksize, processes=n_jobs)
+        vocab = parmap(tokenizer, docs, chunksize=chunksize, processes=n_jobs, verbose=verbose)
     else:
         vocab = list(map(tokenizer, docs))
     total_time = time.time() - start
@@ -175,8 +175,7 @@ def word_ngram_2(doc: spacy.tokens.doc.Doc, sep='-'):
         yield tok
 
 
-def first_shot(use_cached_utterances=True, include_test_vocab=False,
-               n_jobs=4, chunksize=100):
+def first_shot(use_cached_utterances=True, include_test_vocab=False, chunksize=100, n_jobs=1, verbose=False):
     if use_cached_utterances:
         print("### USING CACHED UTTERANCES ###")
     else:
@@ -193,9 +192,9 @@ def first_shot(use_cached_utterances=True, include_test_vocab=False,
         ('subjects_dependency_pos', subjects_dependency_pos),
         ('word_ngram_2', word_ngram_2)
     ]
-    make_vocabulary(utterances, tokenizers=tokenizers, chunksize=chunksize, n_jobs=n_jobs)
+    make_vocabulary(utterances, tokenizers=tokenizers, n_jobs=n_jobs, chunksize=chunksize, verbose=verbose)
     if include_test_vocab:
         print("ALSO MAKING TEST VOCAB")
         utterances_test = test['utter'].tolist()
-        make_vocabulary(utterances_test, tokenizers=tokenizers, chunksize=chunksize, n_jobs=n_jobs)
+        make_vocabulary(utterances_test, tokenizers=tokenizers, chunksize=chunksize, n_jobs=n_jobs, verbose=verbose)
 
