@@ -159,7 +159,10 @@ def make_vocabulary(docs, tokenizers=[], chunksize=25, n_jobs=1, verbose=False):
     total_time = time.time() - start
 
     # save
-    save_vocab(vocab, *tokenizer_names, time=total_time)
+    try:
+        save_vocab(vocab, *tokenizer_names, time=total_time)
+    except:
+        print(vocab)
 
 
 def list_vocabs():
