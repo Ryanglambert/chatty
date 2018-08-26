@@ -17,7 +17,7 @@ import pandas as pd
 import spacy
 
 from chatty.utils.multiprocessing import parmap
-import data
+from research.daily_dialogue import data
 
 nlp = spacy.load('en')
 _SUBJECTS = {'nsubj', 'pobj', 'dobj', 'cobj', 'iobj'}
