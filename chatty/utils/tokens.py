@@ -203,5 +203,5 @@ def first_shot(use_cached_utterances=True, include_test_vocab=False, chunksize=1
 
 
 if __name__ == '__main__':
-    first_shot(n_jobs=36, chunksize=1000, )
+    first_shot(n_jobs=36, chunksize=1000)
 
