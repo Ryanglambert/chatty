@@ -11,6 +11,7 @@ def parmap(func, data: list, chunksize=100, processes=4, verbose=False) -> list:
         it = p.imap(func,
                     data,
                     chunksize=chunksize)
-        for row in it:
-            output.append(row)
+        output = list(it)
+        # for row in it:
+        #     output.append(row)
         return output
