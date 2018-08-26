@@ -175,7 +175,8 @@ def word_ngram_2(doc: spacy.tokens.doc.Doc, sep='-'):
         yield tok
 
 
-def first_shot(use_cached_utterances=True, include_test_vocab=False):
+def first_shot(use_cached_utterances=True, include_test_vocab=False,
+               n_jobs=4, chunksize=100):
     if use_cached_utterances:
         print("### USING CACHED UTTERANCES ###")
     else:
@@ -192,9 +193,9 @@ def first_shot(use_cached_utterances=True, include_test_vocab=False):
         ('subjects_dependency_pos', subjects_dependency_pos),
         ('word_ngram_2', word_ngram_2)
     ]
-    make_vocabulary(utterances, tokenizers=tokenizers, chunksize=100, n_jobs=4)
+    make_vocabulary(utterances, tokenizers=tokenizers, chunksize=chunksize, n_jobs=n_jobs)
     if include_test_vocab:
         print("ALSO MAKING TEST VOCAB")
         utterances_test = test['utter'].tolist()
-        make_vocabulary(utterances_test, tokenizers=tokenizers, chunksize=100, n_jobs=4)
+        make_vocabulary(utterances_test, tokenizers=tokenizers, chunksize=chunksize, n_jobs=n_jobs)
 
