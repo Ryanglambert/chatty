@@ -201,3 +201,7 @@ def first_shot(use_cached_utterances=True, include_test_vocab=False, chunksize=1
         utterances_test = test['utter'].tolist()
         make_vocabulary(utterances_test, tokenizers=tokenizers, chunksize=chunksize, n_jobs=n_jobs, verbose=verbose)
 
+
+if __name__ == '__main__':
+    first_shot(n_jobs=36, chunksize=1000, )
+
