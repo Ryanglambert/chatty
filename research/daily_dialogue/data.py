@@ -240,7 +240,8 @@ def cv_stratified_shuffle(X: np.array,
                           y: np.array,
                           model,
                           splits=5,
-                          upsample=None):
+                          upsample=None,
+                          vocab=None):
     """Rusn stratified shuffle split on X, y, with given model, for n splits
 
     Parameters
