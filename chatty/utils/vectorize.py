@@ -14,6 +14,9 @@ class CountVectorizerColumnN(object):
         raw_documents = raw_documents[:, self.colnum]
         self.countvec.fit_transform(raw_documents)
         return self
+
+    def get_feature_names(self):
+        return self.countvec.get_feature_names()
         
     def transform(self, raw_documents):
         # only interested in one column

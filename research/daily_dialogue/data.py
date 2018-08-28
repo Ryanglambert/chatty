@@ -271,3 +271,13 @@ def cv_stratified_shuffle(X: np.array,
         'models': models,
         'classes': classes
     }
+
+
+def results_to_df(results, X=None, columns=None):
+    y_true = np.concatenate(results['y_true']).reshape(-1, 1)
+    y_proba = np.concatenate(results['y_proba'])
+    classes = results['classes']
+    df_proba = pd.DataFrame(y_proba, columns=classes)
+    df_true = pd.DataFrame(y_true, columns=['y_true'])
+    df = pd.concat([df_true, df_proba], axis=1)
+    return df

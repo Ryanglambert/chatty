@@ -16,7 +16,7 @@ from functools import partial
 import pandas as pd
 import spacy
 
-from chatty.utils.multiprocessing import parmap
+from chatty.utils.methodmultiprocessing import parmap
 from research.daily_dialogue import data
 
 nlp = spacy.load('en')
@@ -52,6 +52,11 @@ def pos_lemma(doc: spacy.tokens.doc.Doc, sep='_'):
     """
     for tok in doc:
         yield sep.join(("LEMMA", tok.lemma_, "POS", tok.pos_))
+
+
+def lemma(doc: spacy.tokens.doc.Doc, sep='_'):
+    for tok in doc:
+        yield sep.join(("LEMMA", tok.lemma_))
 
 
 def pos_and_words(doc: spacy.tokens.doc.Doc, sep='_'):
@@ -174,34 +179,66 @@ def list_vocabs():
 
 
 def word_ngram_2(doc: spacy.tokens.doc.Doc, sep='-'):
-    for tok in ngramize(word(doc)):
+    for tok in ngramize(word(doc), ngrams=[2]):
         yield tok
 
 
-def first_shot(use_cached_utterances=True, include_test_vocab=False, chunksize=100, n_jobs=1, verbose=False):
-    if use_cached_utterances:
-        print("### USING CACHED UTTERANCES ###")
-    else:
-        print("### NOT USING CACHED UTTERANCES ###")
-    # SHOULD USE THE TRAIN DATA INSTEAD OF DIALOGUES DIRECTLY SINCE UTTERANCES ARE ALREADY SPLIT
-    ### \/ methods below don't correctly separate on '__eou__'
-    # import research.daily_dialogue.data as data
-    # dialogues = data.dialogues()
+def lemma_ngram_2(doc: spacy.tokens.doc.Doc, sep='-'):
+    for tok in ngramize(lemma(doc), ngrams=[2]):
+        yield tok
+
+
+def pos_ngram_2(doc: spacy.tokens.doc.Doc, sep='-'):
+    for tok in ngramize(pos(doc), ngrams=[2]):
+        yield tok
+
+
+def dependencies(doc: spacy.tokens.doc.Doc, sep='-'):
+    for tok in doc:
+        lem = tok.pos_ if not tok.is_title else tok.text
+        head_lem = tok.head.lemma_.lower() if not tok.head.is_title else tok.head.text
+        yield "{0}/{1} <--{2}-- {3}/{4}".format(
+            tok.pos_, tok.tag_, tok.dep_,
+            tok.head.pos_, tok.head.tag_
+            )
+
+
+def first_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
     train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
     utterances = train['utter'].tolist()
-    
-    
     tokenizers = [
         ('subjects_dependency_pos', subjects_dependency_pos),
         ('word_ngram_2', word_ngram_2)
     ]
     make_vocabulary(utterances, tokenizers=tokenizers, n_jobs=n_jobs, chunksize=chunksize, verbose=verbose)
-    if include_test_vocab:
-        print("ALSO MAKING TEST VOCAB")
-        utterances_test = test['utter'].tolist()
-        make_vocabulary(utterances_test, tokenizers=tokenizers, chunksize=chunksize, n_jobs=n_jobs, verbose=verbose)
 
+
+def second_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
+    train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
+    utterances = train['utter'].tolist()
+    tokenizers = [
+        ('lemma_ngram_2', lemma_ngram_2),
+        ('lemma_', lemma),
+        ('pos_ngram_2', pos_ngram_2),
+        ('pos', pos)
+    ]
+    make_vocabulary(utterances, tokenizers=tokenizers, n_jobs=n_jobs, chunksize=chunksize, verbose=verbose)
+
+
+def third_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
+    train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
+    utterances = train['utter'].tolist()
+    tokenizers = [
+        ('lemma_ngram_2', lemma_ngram_2),
+        ('lemma_', lemma),
+        ('pos_ngram_2', pos_ngram_2),
+        ('pos', pos),
+        ('dependencies', dependencies)
+    ]
+    make_vocabulary(utterances, tokenizers=tokenizers, n_jobs=n_jobs, chunksize=chunksize, verbose=verbose)
 
 if __name__ == '__main__':
-    first_shot(n_jobs=36, chunksize=1000)
+    # first_shot(n_jobs=36, chunksize=1000)
+    # second_shot(n_jobs=4, chunksize=1000, verbose=True)
+    third_shot(n_jobs=4, chunksize=1000, verbose=True)
 
