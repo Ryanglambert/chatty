@@ -252,7 +252,9 @@ def cv_stratified_shuffle(X: np.array,
     splits : int
         number of folds for cross validation
     upsample : str or None
-        Can specify either 'ADASYN' or 'SMOTE'
+        Can specify either 'ADASYN' or 'SMOTE' or 'random'
+        If 'random' is specified, then the features aren't used
+        (you'll probably do this for text)
 
     Returns
     -------
