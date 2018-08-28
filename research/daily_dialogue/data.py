@@ -223,24 +223,10 @@ def _random_upsample(X, y):
     return X_resampled.ravel(), y_resampled.ravel()
 
 
-def resample(X, y, method='SMOTE'):
-    class Random(object):
-        fit_sample = _random_upsample
-
-    methods = {
-        'SMOTE': SMOTE(),
-        'ADASYN': ADASYN(),
-        'random': Random()
-    }
-    X_resampled, y_resampled = methods[method].fit_sample(X, y)
-    return X_resampled, y_resampled
-
-
 def cv_stratified_shuffle(X: np.array,
                           y: np.array,
                           model,
-                          splits=5,
-                          upsample=None):
+                          splits=5):
     """Rusn stratified shuffle split on X, y, with given model, for n splits
 
     Parameters
@@ -272,10 +258,8 @@ def cv_stratified_shuffle(X: np.array,
         print('Training')
         x_train, x_val = X[train_index], X[val_index]
         y_train, y_val = y[train_index], y[val_index]
-        if upsample:
-            model.fit(*resample(x_train, y_train, method=upsample))
-        else:
-            model.fit(x_train, y_train)
+
+        model.fit(x_train, y_train)
         proba = model.predict_proba(x_val)
         y_true.append(y_val)
         y_proba.append(proba)
