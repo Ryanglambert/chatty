@@ -218,6 +218,18 @@ def chunk_pos_bigram(doc: spacy.tokens.doc.Doc, sep='-'):
                         'CHK_ROOT_HEAD', chunk.root.head.pos_))
 
 
+def fifth_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
+    train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
+    utterances = train['utter'].tolist()
+    tokenizers = [
+        ('chunk_pos_bigram', chunk_pos_bigram),
+        ('word', lemma),
+        ('lemma_ngram_2', lemma_ngram_2),
+        ('pos_ngram_2', pos_ngram_2)
+    ]
+    make_vocabulary(utterances, tokenizers=tokenizers, n_jobs=n_jobs, chunksize=chunksize, verbose=verbose)
+
+
 def fourth_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
     train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
     utterances = train['utter'].tolist()
@@ -267,5 +279,6 @@ if __name__ == '__main__':
     # first_shot(n_jobs=36, chunksize=1000)
     # second_shot(n_jobs=4, chunksize=1000, verbose=True)
     # third_shot(n_jobs=4, chunksize=1000, verbose=True)
-    fourth_shot(n_jobs=4, chunksize=1000, verbose=True)
+    # fourth_shot(n_jobs=4, chunksize=1000, verbose=True)
+    fifth_shot(n_jobs=4, chunksize=1000, verbose=True)
 
