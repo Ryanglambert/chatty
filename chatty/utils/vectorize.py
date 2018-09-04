@@ -1,12 +1,15 @@
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
 
 class CountVectorizerColumnN(object):
     """Just like CountVectorizer plus a colnum to grab from X
     This makes things convenient for using Feature Union with pipeline and sampling
     """
-    def __init__(self, *args, colnum=None, **kwargs):
-        self.countvec = CountVectorizer(*args, **kwargs)
+    def __init__(self, *args, colnum=None, normalize=False, **kwargs):
+        if not normalize:
+            self.countvec = CountVectorizer(*args, **kwargs)
+        else:
+            self.countvec = TfidfVectorizer(*args, use_idf=False, **kwargs)
         self.colnum = colnum
         
         
