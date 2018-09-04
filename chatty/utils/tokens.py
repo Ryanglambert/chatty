@@ -21,7 +21,16 @@ from research.daily_dialogue import data
 
 nlp = spacy.load('en')
 _SUBJECTS = {'nsubj', 'pobj', 'dobj', 'cobj', 'iobj'}
-VOCAB_SPLITTER = '-'
+VOCAB_TITLE_SPLITTER = '-'
+TOKEN_SPLITTER = '*^'
+
+
+def token_splitter(toks: str):
+    return toks.split(TOKEN_SPLITTER)
+
+
+def token_joiner(toks: list):
+    return TOKEN_SPLITTER.join(toks)
 
 
 def ngramize(gen, ngrams=[1], sep='_'):
@@ -102,7 +111,7 @@ def _vocab_path(*token_types):
     # this ensures that we don't have the same two things
     # with different file names
     token_types = sorted(token_types)
-    fpath = VOCAB_SPLITTER.join(["{}".format(tok) for tok in token_types])
+    fpath = VOCAB_TITLE_SPLITTER.join(["{}".format(tok) for tok in token_types])
     fpath = fpath + ".json"
     base_path = _vocab_dir()
     fpath = os.path.join(base_path, fpath)
@@ -174,7 +183,7 @@ def list_vocabs():
     dirs = os.listdir(_vocab_dir())
     vocabs = list(filter(lambda x: '.json' in x, dirs))
     vocabs = [i.replace('.json', '') for i in vocabs]
-    separated_tokens = tuple([sorted(i.split(VOCAB_SPLITTER)) for i in vocabs])
+    separated_tokens = tuple([sorted(i.split(VOCAB_TITLE_SPLITTER)) for i in vocabs])
     return separated_tokens
 
 
@@ -192,7 +201,7 @@ def pos_ngram_2(doc: spacy.tokens.doc.Doc, sep='-'):
     for tok in ngramize(pos(doc), ngrams=[2]):
         yield tok
 
-
+    
 def dependencies(doc: spacy.tokens.doc.Doc, sep='-'):
     for tok in doc:
         lem = tok.pos_ if not tok.is_title else tok.text
@@ -201,6 +210,23 @@ def dependencies(doc: spacy.tokens.doc.Doc, sep='-'):
             tok.pos_, tok.tag_, tok.dep_,
             tok.head.pos_, tok.head.tag_
             )
+
+
+def chunk_pos_bigram(doc: spacy.tokens.doc.Doc, sep='-'):
+    for chunk in doc.noun_chunks:
+        yield sep.join(('CHK_ROOT_POS', chunk.root.pos_,
+                        'CHK_ROOT_HEAD', chunk.root.head.pos_))
+
+
+def fourth_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
+    train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
+    utterances = train['utter'].tolist()
+    tokenizers = [
+        ('chunk_pos_bigram', chunk_pos_bigram),
+        ('word', lemma),
+        ('pos_ngram_2', lemma_ngram_2)
+    ]
+    make_vocabulary(utterances, tokenizers=tokenizers, n_jobs=n_jobs, chunksize=chunksize, verbose=verbose)
 
 
 def first_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
@@ -240,5 +266,6 @@ def third_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=Fals
 if __name__ == '__main__':
     # first_shot(n_jobs=36, chunksize=1000)
     # second_shot(n_jobs=4, chunksize=1000, verbose=True)
-    third_shot(n_jobs=4, chunksize=1000, verbose=True)
+    # third_shot(n_jobs=4, chunksize=1000, verbose=True)
+    fourth_shot(n_jobs=4, chunksize=1000, verbose=True)
 

@@ -226,7 +226,8 @@ def _random_upsample(X, y):
 def cv_stratified_shuffle(X: np.array,
                           y: np.array,
                           model,
-                          splits=5):
+                          splits=5,
+                          proba=True):
     """Rusn stratified shuffle split on X, y, with given model, for n splits
 
     Parameters
