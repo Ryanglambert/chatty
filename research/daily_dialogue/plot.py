@@ -69,7 +69,7 @@ def plot_conv(one):
     ax3.plot(person_b['subjectivity'], person_b.index)
 
 
-def plot_prec_rec(results: dict, title='', save_name=None, figsize=(10, 5), normalize_confusion_matrix=True):
+def plot_prec_rec(results: dict, title='', save_name=None, figsize=(10, 5), normalize_confusion_matrix=True, probabilities=True):
     """Plots precision and recall curves for results dictionary
     Parameters
     ----------
@@ -101,9 +101,15 @@ def plot_prec_rec(results: dict, title='', save_name=None, figsize=(10, 5), norm
         # reset colors so classes share the same color
         ax.set_prop_cycle(None)
         for i, cls in enumerate(classes):
-            precision, recall, thresholds = \
-                precision_recall_curve(y_true_cat.values[:, i],
-                                       y_proba[:, i])
+            if not probabilities:
+                y_proba_cat = pd.get_dummies(y_proba).values
+                precision, recall, thresholds = \
+                    precision_recall_curve(y_true_cat.values[:, i],
+                                        y_proba_cat[:, i])
+            else:
+                precision, recall, thresholds = \
+                    precision_recall_curve(y_true_cat.values[:, i],
+                                        y_proba[:, i])
             ax.plot(recall, precision, label=cls)
 
     # show legends matching colors to splits
@@ -116,9 +122,15 @@ def plot_prec_rec(results: dict, title='', save_name=None, figsize=(10, 5), norm
         y_true = np.concatenate(results['y_true'])
         y_true_cat = pd.get_dummies(y_true)
         y_proba = np.concatenate(results['y_proba'])
-        precision, recall, thresholds = \
-            precision_recall_curve(y_true_cat.values[:, i],
-                                   y_proba[:, i])
+        if not probabilities:
+            y_proba_cat = pd.get_dummies(y_proba).values
+            precision, recall, thresholds = \
+                precision_recall_curve(y_true_cat.values[:, i],
+                                    y_proba_cat[:, i])
+        else:
+            precision, recall, thresholds = \
+                precision_recall_curve(y_true_cat.values[:, i],
+                                    y_proba[:, i])
         ax.plot(recall, precision, label=cls, color='black')
 
     plt.xlabel('Recall')
@@ -129,8 +141,13 @@ def plot_prec_rec(results: dict, title='', save_name=None, figsize=(10, 5), norm
     le = LabelEncoder()
     le.fit(results['classes'])
 
-    cm = confusion_matrix(le.transform(np.concatenate(results['y_true'])),
-                          np.argmax(np.concatenate(results['y_proba']), axis=1))
+    if probabilities:
+        cm = confusion_matrix(le.transform(np.concatenate(results['y_true'])),
+                            np.argmax(np.concatenate(results['y_proba']), axis=1))
+    else:
+        cm = confusion_matrix(np.concatenate(results['y_true']),
+                              np.concatenate(results['y_proba']))
+
     if normalize_confusion_matrix:
         cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
 

@@ -227,7 +227,7 @@ def cv_stratified_shuffle(X: np.array,
                           y: np.array,
                           model,
                           splits=5,
-                          proba=True):
+                          probability=True):
     """Rusn stratified shuffle split on X, y, with given model, for n splits
 
     Parameters
@@ -261,7 +261,10 @@ def cv_stratified_shuffle(X: np.array,
         y_train, y_val = y[train_index], y[val_index]
 
         model.fit(x_train, y_train)
-        proba = model.predict_proba(x_val)
+        if probability:
+            proba = model.predict_proba(x_val)
+        else:
+            proba = model.predict(x_val)
         y_true.append(y_val)
         y_proba.append(proba)
         models.append(model)
