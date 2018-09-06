@@ -31,11 +31,15 @@ class CountVectorizerColumnN(object):
 
 
 class ColumnGetter(object):
-    def __init__(self, colnum_range=(0, 10)):
+    def __init__(self, colnum_range=(0, 10), prefix=''):
         self.colnum_range = colnum_range
+        self.prefix = prefix
 
     def fit(self, X, y=None):
         return self
+
+    def get_feature_names(self):
+        return [self.prefix + str(i) for i in range(*self.colnum_range)]
 
     def transform(self, X):
         start, end = self.colnum_range
@@ -55,7 +59,7 @@ class Cosiner(object):
         return self
 
     def get_feature_names(self):
-        return ['cosine_similarity']
+        return ['cosine_similarity' + str(self.v1_start) + '_' + str(self.v1_end) + '_' + str(self.v2_start) + '_' + str(self.v2_end)]
 
     def transform(self, X):
         "broadcast cosine distance (not pairwise which is slower)"
