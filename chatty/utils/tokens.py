@@ -249,6 +249,21 @@ def chunk_pos_two_bigram(doc: spacy.tokens.doc.Doc, sep='-'):
         yield tok
 
 
+def eighth_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
+    train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
+    utterances = train['utter'].tolist()
+    tokenizers = [
+        # ('chunk_pos_two_bigram', chunk_pos_two_bigram),
+        # ('chunk_pos_bigram', chunk_pos_bigram),
+        # ('word', lemma),
+        # ('lemma_ngram_2', lemma_ngram_2),
+        ('pos_ngram_2', pos_ngram_2),
+        # ('lemma_ngram_3', lemma_ngram_3),
+        # ('pos_ngram_3', pos_ngram_3),
+    ]
+    make_vocabulary(utterances, tokenizers=tokenizers, n_jobs=n_jobs, chunksize=chunksize, verbose=verbose)
+
+
 def seventh_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
     train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
     utterances = train['utter'].tolist()
@@ -342,5 +357,6 @@ if __name__ == '__main__':
     # fourth_shot(n_jobs=4, chunksize=1000, verbose=True)
     # fifth_shot(n_jobs=4, chunksize=1000, verbose=True)
     # sixth_shot(n_jobs=20, chunksize=1000, verbose=True)
-    seventh_shot(n_jobs=30, chunksize=1000, verbose=True)
+    # seventh_shot(n_jobs=30, chunksize=1000, verbose=True)
+    eighth_shot(n_jobs=30, chunksize=1000, verbose=True)
 
