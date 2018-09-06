@@ -238,6 +238,39 @@ def dependencies(doc: spacy.tokens.doc.Doc, sep='-'):
             )
 
 
+def subj_verb_obj(sent: spacy.tokens.span.Span, sep='-'):
+    root = "ROOT({})".format(sent.root.head.text.lower())
+    verbs = []
+    subjects = []
+    objects = []
+    intjs = []
+    auxs = []
+    for child in sent.root.head.children:
+        if 'subj' in child.dep_:
+            subjects.append('SUBJ({})'.format(child.pos_))
+        elif 'obj' in child.dep_:
+            objects.append('OBJ({})'.format(child.pos_))
+        elif 'intj' in child.dep_:
+            intjs.append("INTJ({})".format(child.lemma_))
+        elif 'aux' in child.dep_:
+            auxs.append("AUX({})".format(child.lemma_))
+        elif 'VERB' in child.pos_:
+            verbs.append("VERB({})".format(child.lemma_))
+
+    objects = list(set(objects))
+    subjects = list(set(subjects))
+    intjs = list(set(intjs))
+    auxs = list(set(auxs))
+    tokens = subjects + [root] + objects + verbs + intjs + auxs
+    return sep.join(tokens)
+
+
+def sentence_subj_verb_obj(doc: spacy.tokens.doc.Doc, sep='-'):
+    for sent in doc.sents:
+        tok = subj_verb_obj(sent, sep=sep)
+        yield tok
+
+
 def chunk_pos_bigram(doc: spacy.tokens.doc.Doc, sep='-'):
     for chunk in doc.noun_chunks:
         yield sep.join(('CHK_ROOT_POS', chunk.root.pos_,
@@ -249,6 +282,22 @@ def chunk_pos_two_bigram(doc: spacy.tokens.doc.Doc, sep='-'):
         yield tok
 
 
+def ninth_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
+    train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
+    utterances = train['utter'].tolist()
+    tokenizers = [
+        # ('chunk_pos_two_bigram', chunk_pos_two_bigram),
+        ('chunk_pos_bigram', chunk_pos_bigram),
+        ('word', lemma),
+        # ('lemma_ngram_2', lemma_ngram_2),
+        ('sentence_subj_verb_obj', sentence_subj_verb_obj),
+        # ('pos_ngram_2', pos_ngram_2),
+        # ('lemma_ngram_3', lemma_ngram_3),
+        # ('pos_ngram_3', pos_ngram_3),
+    ]
+    make_vocabulary(utterances, tokenizers=tokenizers, n_jobs=n_jobs, chunksize=chunksize, verbose=verbose)
+
+
 def eighth_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
     train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
     utterances = train['utter'].tolist()
@@ -257,9 +306,9 @@ def eighth_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=Fal
         # ('chunk_pos_bigram', chunk_pos_bigram),
         # ('word', lemma),
         # ('lemma_ngram_2', lemma_ngram_2),
-        ('pos_ngram_2', pos_ngram_2),
+        # ('pos_ngram_2', pos_ngram_2),
         # ('lemma_ngram_3', lemma_ngram_3),
-        # ('pos_ngram_3', pos_ngram_3),
+        ('pos_ngram_3', pos_ngram_3),
     ]
     make_vocabulary(utterances, tokenizers=tokenizers, n_jobs=n_jobs, chunksize=chunksize, verbose=verbose)
 
@@ -358,5 +407,6 @@ if __name__ == '__main__':
     # fifth_shot(n_jobs=4, chunksize=1000, verbose=True)
     # sixth_shot(n_jobs=20, chunksize=1000, verbose=True)
     # seventh_shot(n_jobs=30, chunksize=1000, verbose=True)
-    eighth_shot(n_jobs=30, chunksize=1000, verbose=True)
+    # eighth_shot(n_jobs=30, chunksize=1000, verbose=True)
+    ninth_shot(n_jobs=30, chunksize=1000, verbose=True)
 
