@@ -14,7 +14,7 @@ GOOG_NEWS_PATH = os.path.join(CURDIR,
                               'GoogleNews-vectors-negative300.bin.gz')
 
 
-class _DailyDialogueWordVectors(object):
+class DailyDialogueWordVectors(object):
     def __init__(self):
         self.model = KeyedVectors.load_word2vec_format(GOOG_NEWS_PATH, binary=True)  
 
@@ -55,6 +55,6 @@ class _DailyDialogueWordVectors(object):
 
 def vectorize(*strings_list):
     "A one time vectorization tool to vectorize strings according to Google News word2vec"
-    vectorizer = _DailyDialogueWordVectors()
+    vectorizer = DailyDialogueWordVectors()
     for strings in strings_list:
         yield vectorizer.load_daily_dialogue_vectors(strings)
