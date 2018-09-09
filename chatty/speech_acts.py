@@ -5,14 +5,6 @@ from chatty import model
 from chatty.utils import tokens
 
 
-ACTS = [
-    'commissive',
-    'directive',
-    'inform',
-    'question'
-]
-
-
 _tokenizer = partial(tokens.tokenize_as_list, tokenizers=[tokens.chunk_pos_bigram,
                                                           tokens.sentence_subj_verb_obj,
                                                           tokens.lemma])
@@ -40,14 +32,14 @@ def append_lags(utterances: list) -> list:
     for prev, cur in prev_current_utterances:
         parsed.append((prev, cur))
     return parsed
-#     for prev, cur in zip(lagged_utterances, utterances):
 
 def parse(utterances: list) -> dict:
     utters_with_lags = append_lags(utterances)
     tokenized = [tokenize_utterances(*i) for i in utters_with_lags]
     speech_acts = ["None"] + [clf.predict(toks)[0] for toks in tokenized]
-    # first utterance doesn't get classified
-    confs = ["N/A", list(zip(clf.classes_, [0] * clf.classes_.shape[0]))]
+    # first utterance doesn't get classified so these values are empty
+    confs = [list(zip(clf.classes_, [0] * clf.classes_.shape[0]))]
+    # The rest of the utterances do get classified
     confs += [list(zip(clf.classes_, clf.predict_proba(toks)[0])) for toks in tokenized]
     return {
         'speech_acts': speech_acts,
