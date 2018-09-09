@@ -1,4 +1,4 @@
-from sklearn.externals import joblib
+import pickle
 import os
 
 
@@ -11,14 +11,18 @@ def get_model_path(classifier='speech_act'):
     return os.path.join(base_path, classifier + '.pkl')
 
 
-def save_model(clf, classifer: str):
+def save_model(clf, classifier='speech_act'):
     model_path = get_model_path(classifier)
-    joblib.dump(clf, model_path)
+    print("saving: {}".format(model_path))
+    with open(model_path, 'wb') as f:
+        pickle.dump(clf, f)
 
 
 def load_model(classifier='speech_act'):
     model_path = get_model_path(classifier)
-    return joblib.load(model_path)
+    print("loading: {}".format(model_path))
+    with open(model_path, 'rb') as f:
+        return pickle.load(f)
 
 
 def speech_act_classifier():
