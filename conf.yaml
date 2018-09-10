@@ -1,10 +1,13 @@
 ---
 api:
   local:
+    port: 5000
     debug: True
   dev:
+    port: 5000
     debug: True
   prod:
+    port: 80
     debug: False
 
 core:

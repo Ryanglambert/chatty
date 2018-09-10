@@ -51,4 +51,4 @@ def create_app(config=conf['api']):
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=conf['api']['debug'])
+    app.run(debug=conf['api']['debug'], port=conf['api']['port'])
