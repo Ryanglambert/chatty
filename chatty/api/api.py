@@ -5,7 +5,7 @@ import numpy as np
 from flask import Flask, jsonify, request
 from flask_restplus import Namespace, Resource, fields, Api
 
-from chatty.analyze import analyze
+from chatty.analyze import analyze_slack, analyze
 from chatty.conf import conf
 
 
@@ -18,7 +18,10 @@ def create_app(config=conf['api']):
         "text": fields.String("Text of your conversation from Slack", required=True)
     })
 
-    speech_conf_fields = {}
+    manual_input_model = api.model('Manually Split Utterances', {
+        "utterances": fields.List(fields.String)
+    })
+
     speech_conf_model = api.model('Speech Confs', {
         'commissive': fields.Float(),
         'directive': fields.Float(),
@@ -39,7 +42,7 @@ def create_app(config=conf['api']):
     })
 
     @api.route('/analyze_slack')
-    class ChatAnalyzer(Resource):
+    class SlackChatAnalyzer(Resource):
         @api.expect(slack_input_model)
         @api.marshal_with(output_model)
         def post(self):
@@ -47,7 +50,20 @@ def create_app(config=conf['api']):
             Analyze some Text from slack. Just copy and paste directly from slack (I use the datetime headings to parse between utterances)
             """
             text = json.loads(request.data, strict=False)['text']
-            return analyze(text), 201
+            return analyze_slack(text), 201
+
+
+    @api.route('/analyze')
+    class ManualChatAnalyzer(Resource):
+        @api.expect(manual_input_model)
+        @api.marshal_with(output_model)
+        def post(self):
+            """
+            Analyze utterances that you have already split apart
+            """
+            utterances = json.loads(request.data, strict=False)['utterances']
+            return analyze(utterances)
+
 
     return app
 

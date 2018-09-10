@@ -37,11 +37,6 @@ def _append_lags(utterances: list) -> list:
         parsed.append((prev, cur))
     return parsed
 
-def _marshal_conf(act, conf):
-    return {
-        'speech_act': act,
-        'conf': conf
-    }
 
 def parse(utterances: list) -> dict:
     utters_with_lags = _append_lags(utterances)
@@ -51,7 +46,6 @@ def parse(utterances: list) -> dict:
     confs = [dict(zip(clf.classes_, [0] * clf.classes_.shape[0]))]
     # The rest of the utterances do get classified
     confs += [dict(zip(clf.classes_, clf.predict_proba(toks)[0])) for toks in tokenized]
-    # confs = [_marshal_conf(i, j) for i, j in confs]
 
     return {
         'speech_acts': speech_acts,
