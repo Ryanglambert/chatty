@@ -43,7 +43,9 @@ def create_app(config=conf['api']):
         @api.expect(slack_input_model)
         @api.marshal_with(output_model)
         def post(self):
-            """Analyze some Text"""
+            """
+            Analyze some Text from slack. Just copy and paste directly from slack (I use the datetime headings to parse between utterances)
+            """
             text = json.loads(request.data, strict=False)['text']
             return analyze(text), 201
 
