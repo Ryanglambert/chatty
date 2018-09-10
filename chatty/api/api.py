@@ -62,7 +62,7 @@ def create_app(config=conf['api']):
             Analyze utterances that you have already split apart
             """
             utterances = json.loads(request.data, strict=False)['utterances']
-            return analyze(utterances)
+            return analyze(utterances), 201
 
 
     return app
