@@ -9,3 +9,5 @@ GoogleNews*
 __pycache__/*
 *.pyc
 vocab/
+env/
+.env/
