@@ -215,14 +215,6 @@ def get_data(test_size=1000, use_cached=False):
     return train, train_vecs, test, test_vecs
 
 
-@staticmethod
-def _random_upsample(X, y):
-    X_resampled, y_resampled = RandomOverSampler('minority')\
-                                    .fit_sample(X.reshape(-1, 1),
-                                                y.reshape(-1, 1))
-    return X_resampled.ravel(), y_resampled.ravel()
-
-
 def cv_stratified_shuffle(X: np.array,
                           y: np.array,
                           model,
