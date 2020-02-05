@@ -25,11 +25,11 @@ chatty
  | utils
    | tokens     - Util module for tokenizing text
    | cleaning   - Util module for cleaning text
- | research
-   | daily_dialogue
-     | Speech Act Classifier Final.ipynb - Notebook containing final model chosen for rest api endpoint
-     | data (needs to be moved)          - Util module for preprocessing steps and data transformation
-     | plot                              - Helper module for plotting in notebook
+research
+ | daily_dialogue
+   | Speech Act Classifier Final.ipynb - Notebook containing final model chosen for rest api endpoint
+   | data (needs to be moved)          - Util module for preprocessing steps and data transformation
+   | plot                              - Helper module for plotting in notebook
 
 tests/
  | test_analyze
