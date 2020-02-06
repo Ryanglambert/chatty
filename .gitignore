@@ -12,3 +12,4 @@ __pycache__/*
 vocab/
 env/
 .env/
+*.egg-info/

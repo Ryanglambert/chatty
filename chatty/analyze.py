@@ -5,7 +5,8 @@ from chatty.extractors import conversation_to_utterances
 from chatty.utils import cleaning
 
 
-def _tag(utterances):
+def _tag(utterances: list):
+    "creates tags for each utterance"
     parsed = dict()
     parsed.update({'utterances': utterances})
     parsed.update(speech_acts.parse(utterances))
@@ -15,10 +16,13 @@ def _tag(utterances):
     return parsed
 
 
-def analyze_slack(text):
+def analyze_slack(text: str):
+    "analyzes text in a format coming from slack"
     utterances = conversation_to_utterances(text)
     return _tag(utterances)
 
 
-def analyze(utterances):
+def analyze(utterances: list):
+    """analyzes list of utterances
+    """
     return _tag(utterances)
