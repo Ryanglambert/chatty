@@ -283,7 +283,7 @@ def chunk_pos_two_bigram(doc: spacy.tokens.doc.Doc, sep='-'):
 
 
 def ninth_shot(use_cached_utterances=True, chunksize=100, n_jobs=1, verbose=False):
-    train, _, test, _ = data.get_data(use_cached=use_cached_utterances)
+    train, test = data.get_data(use_cached=use_cached_utterances)
     utterances = train['utter'].tolist()
     tokenizers = [
         # ('chunk_pos_two_bigram', chunk_pos_two_bigram),

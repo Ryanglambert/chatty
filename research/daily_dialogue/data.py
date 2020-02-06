@@ -6,7 +6,7 @@ import textblob
 from imblearn.over_sampling import SMOTE, ADASYN, RandomOverSampler
 from sklearn.model_selection import StratifiedKFold
 
-from chatty.utils import word2vec
+# from chatty.utils import word2vec
 
 
 CUR_DIR = os.path.realpath(os.path.dirname(__file__))
@@ -151,16 +151,8 @@ def _make_df(convs):
                                'topic'])
     df.set_index(['conv'], inplace=True)
     df.set_index([df.index, df.groupby(df.index).cumcount()], inplace=True)
-    # turning off for now
-    # df = _get_recurrent_values(df)
-
-    # add biggest drawup and drawdown (largest change in a conversation)
     df['first_utterance'] = df.index.get_level_values(1)\
         .map(lambda x: 1 if x == 0 else 0)
-    df['biggest_drawup'] = df.groupby([df.index.get_level_values(0), 'person'])['polarity']\
-                             .transform(get_biggest_drawup)
-    df['biggest_drawdown'] = df.groupby([df.index.get_level_values(0), 'person'])['polarity']\
-                               .transform(get_biggest_drawdown)
 
     return df
 
@@ -193,26 +185,18 @@ def _read_pickle_np(name):
 
 
 def get_data(test_size=1000, use_cached=False):
-    "returns `train, train_vecs, test, test_vecs"
     if use_cached:
         print('Using Cached')
         train = _read_pickle_pd('train')
         test = _read_pickle_pd('test')
-        train_vecs = _read_pickle_np('train')
-        test_vecs = _read_pickle_np('test')
-        return train, train_vecs, test, test_vecs
     else:
         print('Not Using Cached')
         print('Parsing Labeled Conversations')
         data = _data()
         train, test = _make_train_test_split(data)
-        print('Making word embeddings')
-        train_vecs, test_vecs = word2vec.vectorize(train['utter'].values, test['utter'].values)
-        _make_pickles_np(train_vecs, 'train')
-        _make_pickles_np(test_vecs, 'test')
         _make_pickles_pd(train, 'train')
         _make_pickles_pd(test, 'test')
-    return train, train_vecs, test, test_vecs
+    return train, test
 
 
 def cv_stratified_shuffle(X: np.array,
