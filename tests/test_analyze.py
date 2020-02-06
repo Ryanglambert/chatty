@@ -1,6 +1,6 @@
 import pytest
 
-from chatty.analyze import analyze
+from chatty.analyze import analyze_slack
 
 
 @pytest.mark.parametrize(
@@ -22,7 +22,7 @@ from chatty.analyze import analyze
     ]
 )
 def test_analyze(input_text):
-    output = analyze(input_text)
+    output = analyze_slack(input_text)
     for field_name, field_type in [
         ('utterances', list),
         ('sentiment', list),
