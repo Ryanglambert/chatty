@@ -4,9 +4,6 @@ import os
 
 def _get_model_path(classifier='speech_act'):
     base_path = os.path.dirname(os.path.realpath(__file__))
-    base_path = os.path.dirname(base_path)
-    base_path = os.path.join(base_path, "research")
-    base_path = os.path.join(base_path, "daily_dialogue")
     return os.path.join(base_path, classifier + '.pkl')
 
 
