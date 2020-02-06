@@ -12,6 +12,11 @@ http://rest.chatty.ryanglambert.com/
   - Checkout `Speech Act Classifier Final.ipynb` in `research/daily_dialogue` for more
   - Model is stored as \*.pkl in the repo
 
+
+# setup
+- Clone the repo
+- put this pkl file in `old_chatty/chatty/` [https://drive.google.com/file/d/1PAgc5sOBUw47muXHX8LLUb6yS7xandgV/view?usp=sharing](pretrained_sklearn_estimator)
+
 # module descriptions
 ```
 chatty
